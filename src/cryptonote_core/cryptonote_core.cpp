@@ -630,8 +630,10 @@ namespace cryptonote
     }
     bad_semantics_txes_lock.unlock();
 
-    uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
-    const size_t max_tx_version = version == 1 ? 1 : 2;
+    int version = m_blockchain_storage.get_current_hard_fork_version();
+
+    unsigned int max_tx_version = version == 1 ? 1 : version < 8 ? 2 : 3;
+
     if (tx.version == 0 || tx.version > max_tx_version)
     {
       // v2 is the latest one we know
@@ -805,7 +807,7 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   bool core::check_tx_semantic(const transaction& tx, bool keeped_by_block) const
   {
-    if(!tx.vin.size())
+    if(tx.version <= 2 && !tx.vin.size())
     {
       MERROR_VER("tx with empty inputs, rejected for tx id= " << get_transaction_hash(tx));
       return false;
@@ -876,7 +878,7 @@ namespace cryptonote
       return false;
     }
 
-    if (tx.version >= 2)
+    if (tx.version == 2)
     {
       const rct::rctSig &rv = tx.rct_signatures;
       switch (rv.type) {
@@ -904,6 +906,11 @@ namespace cryptonote
           MERROR_VER("Unknown rct type: " << rv.type);
           return false;
       }
+    }
+
+    if (tx.version == 3)
+    {
+      // Check for some v3 stuff here maybe
     }
 
     return true;
