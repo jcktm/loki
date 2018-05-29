@@ -1990,6 +1990,15 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_service_nodes(const COMMAND_RPC_GET_SERVICE_NODES::request& req, COMMAND_RPC_GET_SERVICE_NODES::response& res)
+  {
+    res.service_nodes.push_back("cab4ae6148233461074c6bc4c72b8a53ee91d9cfbda5813c3422a3e2897b21e3");
+    res.service_nodes.push_back("96e45f8284bd814e0c8f78696f1c3e0299b3cc9ed2770952864be242547945a0");
+    res.service_nodes.push_back("6954aa84edbe40ea7bae10d3fec81054e7de462fbc6516106db6549faa6f8251");
+    res.service_nodes.push_back("917f12cbb2b79fb41bca2ae41da9033873eb3707b8153b8b86ee105a318056ff");
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_relay_tx(const COMMAND_RPC_RELAY_TX::request& req, COMMAND_RPC_RELAY_TX::response& res, epee::json_rpc::error& error_resp)
   {
     PERF_TIMER(on_relay_tx);

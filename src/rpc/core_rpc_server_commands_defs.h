@@ -2129,6 +2129,24 @@ namespace cryptonote
     };
   };
 
+  struct COMMAND_RPC_GET_SERVICE_NODES
+  {
+    struct request
+    {
+      BEGIN_KV_SERIALIZE_MAP()
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      std::vector<std::string> service_nodes;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(service_nodes)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
   struct COMMAND_RPC_RELAY_TX
   {
     struct request
