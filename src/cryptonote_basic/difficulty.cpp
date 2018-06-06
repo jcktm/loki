@@ -95,6 +95,25 @@ namespace cryptonote {
   }
 
 #endif
+  static inline void div(uint64_t a_low, uint64_t a_high, uint64_t b, uint64_t &low, uint64_t &high) {
+    int i;
+    uint64_t remainder = 0;
+    for (i = 0; i < 128; i++)
+    {
+      remainder <<= 1;
+      if ((1ULL<<63) & a_high) remainder |= 1;
+      a_high <<= 1;
+      a_high |= ((1ULL<<63) & a_low) ? 1 : 0;
+      a_low <<= 1;
+      if (remainder >= b)
+      {
+        remainder -= b;
+        a_low |= 1;
+      }
+    }
+    low = a_low;
+    high = a_high;
+  }
 
   static inline bool cadd(uint64_t a, uint64_t b) {
     return a + b < a;
@@ -168,36 +187,48 @@ namespace cryptonote {
       timestamps.resize(N+1);
       cumulative_difficulties.resize(N+1);
     }
-    // To get an average solvetime to within +/- ~0.1%, use an adjustment factor.
-    // adjust=0.999 for 80 < N < 120(?)
-    const double adjust = 0.998;
-    // The divisor k normalizes the LWMA sum to a standard LWMA.
-    const double k = N * (N + 1) / 2;
 
-    double LWMA(0), sum_inverse_D(0), harmonic_mean_D(0), nextDifficulty(0);
+    // The divisor k normalizes the LWMA sum to a standard LWMA.
+    uint64_t k = (N * (N + 1)) / 2;
+
+    uint64_t nextDifficulty(0);
+    uint64_t sum_inverse_D_numerator = 0;
+    const uint64_t SUM_INVERSE_DENOMINATOR = (1ULL << 50); // accurate to 50 bits.
     int64_t solveTime(0);
-    uint64_t difficulty(0), next_difficulty(0);
+    int64_t kLWMA = 0;
+    uint64_t difficulty(0);
 
     // Loop through N most recent blocks. N is most recently solved block.
     for (int64_t i = 1; i <= (int64_t)N; i++) {
       solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i - 1]);
       solveTime = std::min<int64_t>((T * 7), std::max<int64_t>(solveTime, (-7 * T)));
       difficulty = cumulative_difficulties[i] - cumulative_difficulties[i - 1];
-      LWMA += (solveTime * i) / k;
-      sum_inverse_D += 1 / static_cast<double>(difficulty);
+      kLWMA += solveTime * i;
+      sum_inverse_D_numerator += SUM_INVERSE_DENOMINATOR / difficulty;
     }
 
-    harmonic_mean_D = N / sum_inverse_D;
-
     // Keep LWMA sane in case something unforeseen occurs.
-    if (static_cast<int64_t>(boost::math::round(LWMA)) < T / 20)
-      LWMA = static_cast<double>(T / 20);
+    if (kLWMA * 20 < (int64_t) (T * k))
+    {
+      kLWMA = T / 20;
+      k = 1;
+    }
 
-    nextDifficulty = harmonic_mean_D * T / LWMA * adjust;
+    uint64_t lo, hi, lo2, hi2, lo3, hi3;
+    mul(N*T*k, SUM_INVERSE_DENOMINATOR, lo, hi);
+    div(lo, hi, sum_inverse_D_numerator, lo2, hi2);
+    div(lo2, hi2, kLWMA, lo3, hi3);
+    assert(hi3 == 0);
+    nextDifficulty = lo3;
+
+    // To get an average solvetime to within +/- ~0.1%, use an adjustment factor.
+    // adjust=0.999 for 80 < N < 120(?)
+    nextDifficulty -= 2 * nextDifficulty / 1000;
 
     // No limits should be employed, but this is correct way to employ a 20% symmetrical limit:
     // nextDifficulty=max(previous_Difficulty*0.8,min(previous_Difficulty/0.8, next_Difficulty));
-    next_difficulty = static_cast<uint64_t>(nextDifficulty);
-    return next_difficulty;
+    //next_difficulty = static_cast<uint64_t>(nextDifficulty);
+
+    return nextDifficulty;
   }
 }
