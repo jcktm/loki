@@ -100,23 +100,9 @@ namespace cryptonote
       uint64_t already_generated_coins; //!< the total coins minted after that block
     };
 
-    class BlockAddedHook
-    {
-    public:
-      virtual void block_added(const block& block, const std::vector<transaction>& txs) = 0;
-    };
-
-    class BlockchainDetachedHook
-    {
-    public:
-      virtual void blockchain_detached(uint64_t height) = 0;
-    };
-
-    class InitHook
-    {
-    public:
-      virtual void init() = 0;
-    };
+    typedef std::function<void(const cryptonote::block& block, const std::vector<cryptonote::transaction>& txs)> BlockAddedHookFn;
+    typedef std::function<void(uint64_t height)> BlockchainDetachedHookFn;
+    typedef std::function<void()> InitHookFn;
 
     /**
      * @brief Blockchain constructor
@@ -983,9 +969,9 @@ namespace cryptonote
     /**
      * @brief add a hook for processing new blocks and rollbacks for reorgs
      */
-    void hook_block_added(BlockAddedHook& block_added_hook);
-    void hook_blockchain_detached(BlockchainDetachedHook& blockchain_detached_hook);
-    void hook_init(InitHook& init_hook);
+    void hook_block_added(void* objptr, BlockAddedHookFn block_added_hook);
+    void hook_blockchain_detached(void* objptr, BlockchainDetachedHookFn blockchain_detached_hook);
+    void hook_init(void* objptr, InitHookFn init_hook);
 
   private:
 
@@ -1049,9 +1035,9 @@ namespace cryptonote
     // some invalid blocks
     blocks_ext_by_hash m_invalid_blocks;     // crypto::hash -> block_extended_info
 
-    std::vector<BlockAddedHook*> m_block_added_hooks;
-    std::vector<BlockchainDetachedHook*> m_blockchain_detached_hooks;
-    std::vector<InitHook*> m_init_hooks;
+    std::vector<std::pair<void*, BlockAddedHookFn>> m_block_added_hooks;
+    std::vector<std::pair<void*, BlockchainDetachedHookFn>> m_blockchain_detached_hooks;
+    std::vector<std::pair<void*, InitHookFn>> m_init_hooks;
 
     checkpoints m_checkpoints;
     bool m_enforce_dns_checkpoints;

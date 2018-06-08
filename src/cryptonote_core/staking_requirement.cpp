@@ -26,33 +26,10 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#pragma once
-
-#include "blockchain.h"
-
-namespace service_nodes
+namespace loki
 {
-  class service_node_list
+  uint64_t get_staking_requirement(uint64_t height)
   {
-  public:
-    service_node_list(cryptonote::Blockchain& blockchain);
-    void block_added(const cryptonote::block& block, const std::vector<cryptonote::transaction>& txs);
-    void blockchain_detached(uint64_t height);
-    void init();
-
-    std::vector<crypto::public_key> get_expired_nodes(uint64_t block_height);
-
-  private:
-    bool process_registration_tx(const cryptonote::transaction& tx, uint64_t block_height, crypto::public_key& pub_spendkey_out);
-    template<typename T>
-    void block_added_generic(const cryptonote::block& block, const T& txs);
-
-    bool reg_tx_has_correct_unlock_time(const cryptonote::transaction& tx, uint64_t block_height);
-    bool reg_tx_extract_fields(const cryptonote::transaction& tx, crypto::secret_key& viewkey, crypto::public_key& pub_viewkey, crypto::public_key& pub_spendkey, crypto::public_key& tx_pub_key);
-    void reg_tx_calculate_subaddresses(const crypto::secret_key& viewkey, const crypto::public_key& pub_viewkey, const crypto::public_key& pub_spendkey, std::vector<crypto::public_key>& subaddresses, hw::device& hwdev);
-    bool is_reg_tx_staking_output(const cryptonote::transaction& tx, int i, uint64_t block_height, crypto::key_derivation derivation, std::vector<crypto::public_key> subaddresses, hw::device& hwdev);
-
-    std::unordered_map<crypto::public_key, uint64_t> m_service_nodes_last_reward;
-    cryptonote::Blockchain& m_blockchain;
-  };
+    return 1000;
+  }
 }

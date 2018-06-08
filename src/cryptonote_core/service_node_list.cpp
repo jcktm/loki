@@ -41,9 +41,9 @@ namespace service_nodes
   service_node_list::service_node_list(cryptonote::Blockchain& blockchain)
     : m_blockchain(blockchain)
   {
-    blockchain.hook_block_added(*this);
-    blockchain.hook_blockchain_detached(*this);
-    blockchain.hook_init(*this);
+    blockchain.hook_block_added(this, block_added);
+    blockchain.hook_blockchain_detached(this, blockchain_detached);
+    blockchain.hook_init(this, init);
   }
 
   void service_node_list::init()

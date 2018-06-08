@@ -404,8 +404,8 @@ bool Blockchain::init(BlockchainDB* db, const network_type nettype, bool offline
 
   update_next_cumulative_size_limit();
 
-  for (InitHook* hook : m_init_hooks)
-    hook->init();
+  for (std::pair<void*, InitHookFn>& hook : m_init_hooks)
+    (hook.first->*hook.second)();
 
   return true;
 }
@@ -845,8 +845,8 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 
   auto split_height = m_db->height();
 
-  for (BlockchainDetachedHook* hook : m_blockchain_detached_hooks)
-    hook->blockchain_detached(split_height);
+  for (std::pair<void *, BlockchainDetachedHookFn>& hook : m_blockchain_detached_hooks)
+    (hook.first->*hook.second)(split_height);
 
   //connecting new alternative chain
   for(auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
@@ -3578,8 +3578,8 @@ leave:
     LOG_ERROR("Blocks that failed verification should not reach here");
   }
 
-  for (BlockAddedHook* hook : m_block_added_hooks)
-    hook->block_added(bl, txs);
+  for (std::pair<void *, BlockAddedHookFn>& hook : m_block_added_hooks)
+    (hook.first->*hook.second)(bl, txs);
 
   TIME_MEASURE_FINISH(addblock);
 
@@ -4529,19 +4529,19 @@ bool Blockchain::for_all_outputs(uint64_t amount, std::function<bool(uint64_t he
   return m_db->for_all_outputs(amount, f);;
 }
 
-void Blockchain::hook_init(Blockchain::InitHook& init_hook)
+void Blockchain::hook_init(void* objptr, Blockchain::InitHookFn init_hook)
 {
-  m_init_hooks.push_back(&init_hook);
+  m_init_hooks.push_back(make_pair(objptr, init_hook));
 }
 
-void Blockchain::hook_block_added(Blockchain::BlockAddedHook& block_added_hook)
+void Blockchain::hook_block_added(void* objptr, Blockchain::BlockAddedHookFn block_added_hook)
 {
-  m_block_added_hooks.push_back(&block_added_hook);
+  m_block_added_hooks.push_back(make_pair(objptr, block_added_hook));
 }
 
-void Blockchain::hook_blockchain_detached(Blockchain::BlockchainDetachedHook& blockchain_detached_hook)
+void Blockchain::hook_blockchain_detached(void* objptr, Blockchain::BlockchainDetachedHookFn blockchain_detached_hook)
 {
-  m_blockchain_detached_hooks.push_back(&blockchain_detached_hook);
+  m_blockchain_detached_hooks.push_back(make_pair(objptr, blockchain_detached_hook));
 }
 
 namespace cryptonote {
