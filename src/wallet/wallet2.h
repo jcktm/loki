@@ -755,6 +755,12 @@ namespace tools
         a & m_blockchain;
       }
       a & m_transfers;
+      for (const auto& transfer : m_transfers)
+        if (transfer.m_tx.version == 3 && transfer.m_tx.vout.size() != transfer.m_tx.output_unlock_times.size())
+        {
+          LOG_ERROR("more helpful hints");
+          tools::log_stack_trace("scooby dooby doo");
+        }
       a & m_account_public_address;
       a & m_key_images;
       if(ver < 6)
@@ -1327,6 +1333,8 @@ namespace boost
       else
       {
         a & x.m_tx;
+        if (x.m_tx.version == 3 && x.m_tx.vout.size() != x.m_tx.output_unlock_times.size())
+          LOG_ERROR("fuck this sucks");
       }
       a & x.m_spent;
       a & x.m_key_image;
