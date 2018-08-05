@@ -127,6 +127,7 @@ namespace cryptonote
     difficulty_type m_diffic;
     uint64_t m_height;
     volatile uint32_t m_thread_index; 
+    volatile uint32_t m_blocks_to_mine;
     volatile uint32_t m_threads_total;
     std::atomic<int32_t> m_pausers_count;
     epee::critical_section m_miners_count_lock;

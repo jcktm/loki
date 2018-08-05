@@ -50,9 +50,9 @@
 #define CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2           60*10
 #define CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE             10
 
-#define STAKING_REQUIREMENT_LOCK_BLOCKS_EXCESS          20
-#define STAKING_REQUIREMENT_LOCK_BLOCKS                 (30*24*31)
-#define STAKING_RELOCK_WINDOW_BLOCKS                    (30*6)
+#define STAKING_REQUIREMENT_LOCK_BLOCKS_EXCESS          10
+#define STAKING_REQUIREMENT_LOCK_BLOCKS                 (30*5)
+#define STAKING_RELOCK_WINDOW_BLOCKS                    (30)
 #define STAKING_PORTIONS                                0xfffffffc // Use a multiple of four, so that it divides easily by max number of contributors.
 #define MAX_NUMBER_OF_CONTRIBUTORS                      4
 #define MIN_PORTIONS                                    (STAKING_PORTIONS / MAX_NUMBER_OF_CONTRIBUTORS)
