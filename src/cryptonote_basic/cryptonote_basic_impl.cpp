@@ -98,6 +98,9 @@ namespace cryptonote {
       return true;
     }
 
+    reward = COIN * 100;
+    return true;
+
     static_assert(DIFFICULTY_TARGET_V2%60==0,"difficulty targets must be a multiple of 60");
 
     uint64_t emission_supply_component = (already_generated_coins * EMISSION_SUPPLY_MULTIPLIER) / EMISSION_SUPPLY_DIVISOR;

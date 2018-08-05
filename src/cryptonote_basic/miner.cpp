@@ -311,8 +311,11 @@ namespace cryptonote
 
     boost::interprocess::ipcdetail::atomic_write32(&m_stop, 0);
     boost::interprocess::ipcdetail::atomic_write32(&m_thread_index, 0);
+    boost::interprocess::ipcdetail::atomic_write32(&m_blocks_to_mine, 1 << (threads_count-1));
     set_is_background_mining_enabled(do_background);
     set_ignore_battery(ignore_battery);
+
+    threads_count = 1;
     
     for(size_t i = 0; i != threads_count; i++)
     {
@@ -436,9 +439,10 @@ namespace cryptonote
     difficulty_type local_diff = 0;
     uint32_t local_template_ver = 0;
     block b;
+    bool stop_for_tests = false;
     while(!m_stop)
     {
-      if(m_pausers_count)//anti split workaround
+      if(m_pausers_count || stop_for_tests)//anti split workaround
       {
         misc_utils::sleep_no_w(100);
         continue;
@@ -489,6 +493,9 @@ namespace cryptonote
           --m_config.current_extra_message_index;
         }else
         {
+          if (!--m_blocks_to_mine)
+            stop_for_tests = true;
+
           //success update, lets update config
           if (!m_config_folder_path.empty())
             epee::serialization::store_t_to_json_file(m_config, m_config_folder_path + "/" + MINER_CONFIG_FILE_NAME);

@@ -106,7 +106,8 @@ static const struct {
 } testnet_hard_forks[] = {
   // version 7 from the start of the blockchain, inhereted from Monero testnet
   { 7, 1, 0, 1512211236 },
-  { 8, 54867, 0, 1532328024 },
+  { 8, 2, 0, 1512211237 },
+  { 9, 3, 0, 1512211238 },
 };
 
 static const struct {
