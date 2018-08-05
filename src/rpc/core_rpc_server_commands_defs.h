@@ -380,6 +380,7 @@ namespace cryptonote
         std::string public_key;
         uint64_t  index;
         uint64_t global_index;
+        uint64_t unlock_time;
         std::string rct;
         std::string tx_hash;
         std::string tx_pub_key;

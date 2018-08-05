@@ -50,6 +50,7 @@
 #include "tx_extra.h"
 #include "ringct/rctTypes.h"
 #include "device/device.hpp"
+#include "common/stack_trace.h"
 
 namespace cryptonote
 {
@@ -181,8 +182,10 @@ namespace cryptonote
 
     BEGIN_SERIALIZE()
       VARINT_FIELD(version)
-      if (version > 2)
+      LOG_ERROR("This is jsut a test to see that this is even happeining, version is " << version);
+      if (version >= 3)
       {
+        LOG_ERROR("And now this si happening");
         FIELD(output_unlock_times)
         FIELD(is_deregister)
       }
@@ -190,7 +193,10 @@ namespace cryptonote
       VARINT_FIELD(unlock_time)
       FIELD(vin)
       FIELD(vout)
-      if (version >= 3 && vout.size() != output_unlock_times.size()) return false;
+      if (version >= 3 && vout.size() != output_unlock_times.size()) {
+        LOG_ERROR("ok this shit should be failing");
+        return false;
+      }
       FIELD(extra)
     END_SERIALIZE()
 
@@ -203,6 +209,7 @@ namespace cryptonote
         if (out_index >= output_unlock_times.size())
         {
           LOG_ERROR("Tried to get unlock time of a v3 transaction with missing output unlock time");
+          tools::log_stack_trace("aoeu");
           return unlock_time;
         }
         return output_unlock_times[out_index];
