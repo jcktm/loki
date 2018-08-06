@@ -255,7 +255,7 @@ basic_registration_test() {
 
   if equal $((balance-0.02)) $new_balance
   then
-    echo "Received balance when should not"
+    echo "Received balance when should not: balance is $balance new balance is $new_balance"
     return
   fi
 
