@@ -1115,7 +1115,6 @@ void wallet2::scan_output(const cryptonote::transaction &tx, const crypto::publi
   {
     tx_scan_info.money_transfered = tools::decodeRct(tx.rct_signatures, tx_scan_info.received->derivation, i, tx_scan_info.mask, m_account.get_device());
   }
-  std::cout << "Got unlock time for " << tx_scan_info.money_transfered << " is " << tx.get_unlock_time(i) << std::endl;
   tx_money_got_in_outs.push_back(tx_money_got_in_out{ tx_scan_info.received->index, tx_scan_info.money_transfered, tx.get_unlock_time(i) });
   tx_scan_info.amount = tx_scan_info.money_transfered;
   ++num_vouts_received;
@@ -1361,9 +1360,6 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
             td.m_internal_output_index = o;
             td.m_global_output_index = o_indices[o];
             td.m_tx = (const cryptonote::transaction_prefix&)tx;
-            if (td.m_tx.version == 3 && td.m_tx.vout.size() != td.m_tx.output_unlock_times.size()) {
-              LOG_ERROR("It's the guy who runs the water slide");
-            }
             td.m_txid = txid;
             td.m_key_image = tx_scan_info[o].ki;
             td.m_key_image_known = !m_watch_only && !m_multisig;
@@ -4339,8 +4335,6 @@ std::map<uint32_t, uint64_t> wallet2::unlocked_balance_per_subaddress(uint32_t i
   std::map<uint32_t, uint64_t> amount_per_subaddr;
   for(const transfer_details& td: m_transfers)
   {
-    std::cout << "transfer details internal output index is " << td.m_internal_output_index << " adn lock time is " << td.m_tx.get_unlock_time(td.m_internal_output_index) << "\n";
-    std::cout << " td.m_tx.version = "  << td.m_tx.version << std::endl;
     if(td.m_subaddr_index.major == index_major && !td.m_spent && is_transfer_unlocked(td))
     {
       auto found = amount_per_subaddr.find(td.m_subaddr_index.minor);
@@ -10167,9 +10161,6 @@ size_t wallet2::import_outputs(const std::vector<tools::wallet2::transfer_detail
 
     m_key_images[td.m_key_image] = m_transfers.size();
     m_pub_keys[td.get_public_key()] = m_transfers.size();
-    if (td.m_tx.version == 3 && td.m_tx.vout.size() != td.m_tx.output_unlock_times.size()) {
-      LOG_ERROR("It's the janitor");
-    }
     m_transfers.push_back(td);
   }
 
