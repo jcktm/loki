@@ -23,17 +23,18 @@ participate in this service node in order to reserve their place.
 
 The service node operator runs the following command from the service node:
 
-    ./lokid --prepare-registration <address> <fraction> <address2> <fraction2> ... <contribution address> <contribution amount>
+    ./lokid --prepare-registration <operator cut> <address> <fraction> <address2> <fraction2> ... <contribution amount>
 
 The address/fraction pairs are to reserve a portion of the service node reward for address1, address2, ..., etc. where fraction is between 0.25 and 1.
+The first address is always the service node operator's address. The operator cut is the amount reserved for the pool operator.
 
-The contribution address and amount means that you will send `<contribution amount>` funds in a locked transfer for 30 days worth of blocks to `<contribution address>`
+The contribution address and amount means that you will send `<contribution amount>` funds in a locked transfer for 30 days worth of blocks.
 
 ### Basic Example
 
 To do a basic registration of a single contributor (you), you would run this:
 
-    ./lokid --prepare-registration L7q6DxQGnP6P... 1 L7q6DxQGnP6P... 35000.0
+    ./lokid --prepare-registration 0 L7q6DxQGnP6P... 1 L7q6DxQGnP6P... 35000.0
 
 This means the given address will receive 100% of the rewards, and the wallet will send 35000.0 to that address in a locked transfer.
 
@@ -43,7 +44,7 @@ This will generate a signed command that is valid for two weeks to run in the CL
 
 To do a basic registration with two participants, you would run this:
 
-    ./lokid --prepare-registration L7q6DxQGnP6P...  0.5 L514yZNZuTHb... 0.5 L7q6DxQGnP6P... 17500.0
+    ./lokid --prepare-registration 0 L7q6DxQGnP6P...  0.5 L514yZNZuTHb... 0.5 L7q6DxQGnP6P... 17500.0
 
 In this example, each of the two specified addresses will have 50% of the staking contribution reserved for them. The first address is specified for the locked transaction of 17500.0 at the end.
 
@@ -59,7 +60,7 @@ Where `<pubkey>` is the service node public key and the address specified is the
 
 To do a basic registration with one guaranteed participant of 25%, and an open number of pooled participants, you would run this:
 
-    ./lokid --prepare-registration L7q6DxQGnP6P... 0.25 L7q6DxQGnP6P... 8750.0
+    ./lokid --prepare-registration 0 L7q6DxQGnP6P... 0.25 L7q6DxQGnP6P... 8750.0
 
 This means reserve 25% for the specified address, then send a 30-day locked transfer of 8750.0 to the specified address.
 
@@ -68,3 +69,11 @@ Then participants who want to contribute to this pool can do so with this comman
     stake <pubkey> L514yZNZuTHb... <amount>
 
 Where `<pubkey>` is the public key for the service node and `<amount>` is the amount they want to contribute.
+
+### Operator costs
+
+Optionally, the registration can include a portion of the payout to the service node operator, irrespective of relative contributions. For this change the first argument after --prepare-registration to the cut reserved for the service node operator costs.
+
+e.g. to reserve 30% to the operator, and split the remaining parts equally between two contributors, you use this command:
+
+    ./lokid --prepare-registration 0.33 L7q6DxQGnP6P...  0.5 L514yZNZuTHb... 0.5 L7q6DxQGnP6P... 17500.0
