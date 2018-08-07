@@ -209,12 +209,12 @@ basic_registration_test() {
 
   balance=$new_balance
 
-  # basic_registration 1 # this is to check that registration fails.
+  basic_registration 1 # this is to check that registration fails.
   mine_n_blocks 0 1                               #second block
 
   new_balance=$(get_balance 1)
 
-  if ! equal $(( balance + 50 - 0 * 0.016 )) $new_balance
+  if ! equal $(( balance + 50 - 1 * 0.016 )) $new_balance
   then
     echo "Didn't get second last reward. Balance is $balance, new balance is $new_balance"
     return
@@ -253,7 +253,7 @@ basic_registration_test() {
 
   new_balance=$(get_balance 1)
 
-  if equal $((balance-0.02)) $new_balance
+  if ! equal $((balance-0.02)) $new_balance
   then
     echo "Received balance when should not: balance is $balance new balance is $new_balance"
     return
