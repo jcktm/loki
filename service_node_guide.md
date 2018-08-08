@@ -41,6 +41,7 @@ To do a basic registration of a single contributor (you), you would run this:
     ./lokid --prepare-registration 0 L7q6DxQGnP6P... 1 35000.0
 
 This means the given address will receive 100% of the rewards, and the wallet will send 35000.0 to that address in a locked transfer.
+Note that in testnet the stake amount is statically set at **100 Loki** and the registration period is 2 days 
 
 This will generate a signed command that is valid for two weeks to run in the CLI wallet:
 
