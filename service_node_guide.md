@@ -10,6 +10,10 @@ And the service node pubkey 3b7ba0f1ab253dcef33fd131c7482a2767740ca6f5e343001751
 
 ## Overview
 
+Service node daemons are launched with the `--service-node` flag as thus:
+
+    ./lokid --service-node
+
 Service node staking and registration is generally done in two parts:
 
 1. First the service node operator registers the service node and provides
