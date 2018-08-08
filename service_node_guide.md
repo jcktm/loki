@@ -23,6 +23,13 @@ unless there is less than 25% remaining to be filled.
 The service node operator should specify any addresses that are supposed to
 participate in this service node in order to reserve their place.
 
+To use this guide you will need to use the Loki CLI wallet, to access the CLI wallet open a terminal/command prompt window and use the CD (Change directory) command to navigate to the folder you downloaded your CLI wallet to.
+
+If you are reading this guide while Service Nodes are being tested on testnet you will need to **add the --testnet flag to your daemon** and wallet on startup. 
+
+the Daemon and wallet can be started by using the command in terminal ./lokid (Daemon) and ./loki-cli-wallet (Wallet)
+if you are using windows you can omit the ./
+
 ## Basic syntax
 
 The service node operator runs the following command from the service node:
