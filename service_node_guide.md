@@ -92,6 +92,8 @@ Where `<pubkey>` is the public key for the service node and `<amount>` is the am
 
 Optionally, the registration can include a portion of the payout to the service node operator, irrespective of relative contributions. For this change the first argument after --prepare-registration to the cut reserved for the service node operator costs.
 
+It is important to note that the payout fractions for each of the addresses refers to the *remaining* portion, after the service node operator cut has been deducted.
+
 e.g. to reserve 30% to the operator, and split the remaining parts equally between two contributors, you use this command:
 
     ./lokid --prepare-registration 0.33 L7q6DxQGnP6P...  0.5 L514yZNZuTHb... 0.5 17500.0
