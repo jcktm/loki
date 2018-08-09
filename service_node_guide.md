@@ -36,7 +36,7 @@ if you are using windows you can omit the ./
 
 ## Basic syntax
 
-The service node operator runs the following command from the service node:
+The service node operator runs the following command from the shell:
 
     ./lokid --prepare-registration <operator cut> <address> <fraction> <address2> <fraction2> ... <contribution amount>
 
