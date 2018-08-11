@@ -91,6 +91,8 @@ int main(int argc, char* argv[])
   }
   else if (command_line::get_arg(vm, arg_generate_and_play_test_data))
   {
+    GENERATE_AND_PLAY(gen_rct_transfer);
+    /*
     GENERATE_AND_PLAY(gen_simple_chain_001);
     GENERATE_AND_PLAY(gen_simple_chain_split_1);
     GENERATE_AND_PLAY(one_block);
@@ -217,6 +219,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1__no_threshold);
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_2_no_threshold);
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_3_no_threshold);
+    */
 
     el::Level level = (failed_tests.empty() ? el::Level::Info : el::Level::Error);
     MLOG(level, "\nREPORT:");

@@ -44,6 +44,7 @@
 
 #include "chaingen.h"
 #include "device/device.hpp"
+#include "wallet/wallet2.h"
 using namespace std;
 
 using namespace epee;
@@ -519,7 +520,7 @@ bool fill_tx_sources(std::vector<tx_source_entry>& sources, const std::vector<te
 
             sources.push_back(ts);
 
-            sources_amount += ts.amount;
+            sources_amount += transferred;
             sources_found = amount <= sources_amount;
         }
 
@@ -615,10 +616,61 @@ bool construct_tx_to_key(const std::vector<test_event_entry>& events, cryptonote
 {
   vector<tx_source_entry> sources;
   vector<tx_destination_entry> destinations;
-  fill_tx_sources_and_destinations(events, blk_head, from, to, amount, fee, nmix, sources, destinations);
-  tx_destination_entry change_addr{ amount, from.get_keys().m_account_address, false /* is subaddr */ };
 
-  return construct_tx(from.get_keys(), sources, destinations, change_addr, std::vector<uint8_t>(), tx, 0);
+  std::vector<cryptonote::block> blockchain;
+  map_hash2tx_t mtx;
+  if (!find_block_chain(events, blockchain, mtx, get_block_hash(blk_head)))
+      return false;
+
+  map_output_idx_t outs;
+  map_output_t outs_mine;
+  if (!init_output_indices(outs, outs_mine, blockchain, mtx, from))
+      return false;
+
+  std::vector<tools::wallet2::get_outs_entry> outs_for_wallet;
+  for (const auto& out : outs[0])
+    if (std::find(outs_mine[0].begin(), outs_mine[0].end(), out.idx) == outs_mine[0].end())
+      outs_for_wallet.push_back(std::make_tuple(out.idx, boost::get<txout_to_key>(out.out).key, rct::identity()));
+
+  tools::wallet2 wallet;
+  wallet.generate("", "", from.get_keys().m_account_address, from.get_keys().m_spend_secret_key, from.get_keys().m_view_secret_key, false);
+  wallet.set_fork_version_for_tests(9, 0.1 * COIN, outs_for_wallet);
+
+  uint64_t height = 0;
+  
+  cryptonote::block_complete_entry bche;
+  cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::block_output_indices out_indices;
+  uint64_t global_out = 0;
+  for (const cryptonote::block& bl : blockchain)
+  {
+    bche.block = block_to_blob(bl);
+    out_indices.indices.clear();
+    out_indices.indices.resize(out_indices.indices.size()+1);
+    for (size_t i = 0; i < bl.miner_tx.vout.size(); i++)
+      out_indices.indices.back().indices.push_back(global_out++);
+    for (const auto& txid : bl.tx_hashes)
+    {
+      bche.txs.resize(bche.txs.size()+1);
+      if (!tx_to_blob(*mtx[txid], bche.txs.back()))
+        return false;
+      out_indices.indices.resize(out_indices.indices.size()+1);
+      for (size_t i = 0; i < mtx[txid]->vout.size(); i++)
+        out_indices.indices.back().indices.push_back(global_out++);
+    }
+    wallet.process_new_blockchain_entry(bl, bche, get_block_hash(bl), height, out_indices, true);
+    height++;
+  }
+  
+  vector<cryptonote::tx_destination_entry> dsts;
+  dsts.push_back(cryptonote::tx_destination_entry{ amount, to.get_keys().m_account_address, false /* is subaddress */ });
+  std::vector<uint8_t> extra;
+  std::set<uint32_t> subaddr_indices;
+  std::vector<tools::wallet2::pending_tx> pending = wallet.create_transactions_2(dsts, 9 /* mixins */, 0 /* unlock_time */, 0 /* priority */, extra, 0 /* current subaddress */, subaddr_indices, true);
+
+  if (pending.size() > 1)
+    return false;
+  tx = pending[0].tx;
+  return true;
 }
 
 transaction construct_tx_with_fee(std::vector<test_event_entry>& events, const block& blk_head,

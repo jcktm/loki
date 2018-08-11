@@ -680,7 +680,9 @@ wallet2::wallet2(network_type nettype, bool restricted):
   m_light_wallet_unlocked_balance(0),
   m_key_on_device(false),
   m_ring_history_saved(false),
-  m_ringdb()
+  m_ringdb(),
+  m_use_fork_version_for_tests(0),
+  m_per_kb_fee_for_tests(0)
 {
 }
 
@@ -1581,7 +1583,7 @@ void wallet2::process_outgoing(const crypto::hash &txid, const cryptonote::trans
   add_rings(tx);
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::process_new_blockchain_entry(const cryptonote::block& b, const cryptonote::block_complete_entry& bche, const crypto::hash& bl_id, uint64_t height, const cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::block_output_indices &o_indices)
+void wallet2::process_new_blockchain_entry(const cryptonote::block& b, const cryptonote::block_complete_entry& bche, const crypto::hash& bl_id, uint64_t height, const cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::block_output_indices &o_indices, bool always_process)
 {
   size_t txidx = 0;
   THROW_WALLET_EXCEPTION_IF(bche.txs.size() + 1 != o_indices.indices.size(), error::wallet_internal_error,
@@ -1591,7 +1593,7 @@ void wallet2::process_new_blockchain_entry(const cryptonote::block& b, const cry
   //handle transactions from new block
     
   //optimization: seeking only for blocks that are not older then the wallet creation time plus 1 day. 1 day is for possible user incorrect time setup
-  if(b.timestamp + 60*60*24 > m_account.get_createtime() && height >= m_refresh_from_block_height)
+  if(always_process || (b.timestamp + 60*60*24 > m_account.get_createtime() && height >= m_refresh_from_block_height))
   {
     TIME_MEASURE_START(miner_tx_handle_time);
     process_new_transaction(get_transaction_hash(b.miner_tx), b.miner_tx, o_indices.indices[txidx++].indices, height, b.timestamp, true, false, false);
@@ -5311,6 +5313,8 @@ uint64_t wallet2::get_fee_multiplier(uint32_t priority, int fee_algorithm) const
 //----------------------------------------------------------------------------------------------------
 uint64_t wallet2::get_dynamic_per_kb_fee_estimate() const
 {
+  if (m_per_kb_fee_for_tests)
+    return m_per_kb_fee_for_tests;
   uint64_t fee;
   boost::optional<std::string> result = m_node_rpc_proxy.get_dynamic_per_kb_fee_estimate(FEE_ESTIMATE_GRACE_BLOCKS, fee);
   if (!result)
@@ -5881,6 +5885,22 @@ void wallet2::get_outs(std::vector<std::vector<tools::wallet2::get_outs_entry>> 
 
   if (fake_outputs_count > 0)
   {
+    if (!m_use_outs_for_tests.empty())
+    {
+      for (size_t idx: selected_transfers)
+      {
+        const transfer_details &td = m_transfers[idx];
+        std::vector<get_outs_entry> v;
+        const rct::key mask = td.is_rct() ? rct::commit(td.amount(), td.m_mask) : rct::zeroCommit(td.amount());
+        v.push_back(std::make_tuple(td.m_global_output_index, td.get_public_key(), mask));
+        for (size_t i = 0; i < fake_outputs_count; i++)
+          v.push_back(m_use_outs_for_tests[i]);
+        outs.push_back(v);
+      }
+    }
+    else
+    {
+
     uint64_t segregation_fork_height = get_segregation_fork_height();
     // check whether we're shortly after the fork
     uint64_t height;
@@ -6302,6 +6322,7 @@ void wallet2::get_outs(std::vector<std::vector<tools::wallet2::get_outs_entry>> 
       base += requested_outputs_count;
     }
     THROW_WALLET_EXCEPTION_IF(!scanty_outs.empty(), error::not_enough_outs_to_mix, scanty_outs, fake_outputs_count);
+    }
   }
   else
   {
@@ -8088,6 +8109,8 @@ bool wallet2::use_fork_rules(uint8_t version, int64_t early_blocks) const
 {
   // TODO: How to get fork rule info from light wallet node?
   if(m_light_wallet)
+    return true;
+  if (m_use_fork_version_for_tests >= version)
     return true;
   uint64_t height, earliest_height;
   boost::optional<std::string> result = m_node_rpc_proxy.get_height(height);
@@ -10524,5 +10547,11 @@ bool wallet2::contains_address(const cryptonote::account_public_address& address
         return true;
   }
   return false;
+}
+//----------------------------------------------------------------------------------------------------
+void wallet2::set_fork_version_for_tests(int version, uint64_t per_kb_fee, const std::vector<get_outs_entry>& outs_for_tests) {
+  m_use_fork_version_for_tests = version;
+  m_per_kb_fee_for_tests = per_kb_fee;
+  m_use_outs_for_tests = outs_for_tests;
 }
 }
