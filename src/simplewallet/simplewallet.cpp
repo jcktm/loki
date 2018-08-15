@@ -4694,6 +4694,12 @@ bool simple_wallet::register_service_node(const std::vector<std::string> &args_)
   if (!try_connect_to_daemon())
     return true;
 
+  if (!m_wallet->use_fork_rules(9))
+  {
+    fail_msg_writer() << tr("registration is not possible before hardfork 9");
+    return true;
+  }
+
   std::vector<std::string> local_args = args_;
 
   std::set<uint32_t> subaddr_indices;
@@ -4953,6 +4959,12 @@ bool simple_wallet::stake(const std::vector<std::string> &args_)
   if (m_wallet->ask_password() && !get_and_verify_password()) { return true; }
   if (!try_connect_to_daemon())
     return true;
+
+  if (!m_wallet->use_fork_rules(9))
+  {
+    fail_msg_writer() << tr("staking is not possible before hardfork 9");
+    return true;
+  }
 
   std::vector<std::string> local_args = args_;
 
