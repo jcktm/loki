@@ -817,7 +817,7 @@ namespace cryptonote
      bool add_deregister_vote(const loki::service_node_deregister::vote& vote, vote_verification_context &vvc);
 
      /**
-      * @brief Return the account associated to this service node.
+      * @brief Get the keypair for this service node.
 
       * @param pub_key The public key for the service node, unmodified if not a service node
 
@@ -826,6 +826,13 @@ namespace cryptonote
       * @return True if we are a service node
       */
      bool get_service_node_keys(crypto::public_key &pub_key, crypto::secret_key &sec_key) const;
+
+     /**
+      * @brief Set the keypair for this service node. Used for tests.
+      * @param sec_key The secret key.
+      * @return True if core is operating in service node mode.
+      */
+     bool set_service_node_keys(const cryptonote::keypair& service_node_keys);
 
      /**
       * @brief attempts to submit an uptime proof to the network, if this is running in service node mode

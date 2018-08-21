@@ -363,11 +363,9 @@ namespace service_nodes
       auto iter = std::find(service_node_addresses.begin(), service_node_addresses.begin() + i, service_node_addresses[i]);
       if (iter != service_node_addresses.begin() + i)
         return false;
-      uint64_t hi, lo, resulthi, resultlo;
-      lo = mul128(info.staking_requirement, service_node_portions[i], &hi);
-      div128_64(hi, lo, STAKING_PORTIONS, &resulthi, &resultlo);
-      info.contributors.push_back(service_node_info::contribution(resultlo, service_node_addresses[i]));
-      info.total_reserved += resultlo;
+      uint64_t amount = portions_to_amount(service_node_portions[i], info.staking_requirement);
+      info.contributors.push_back(service_node_info::contribution(amount, service_node_addresses[i]));
+      info.total_reserved += amount;
     }
 
     return true;
@@ -1085,6 +1083,26 @@ namespace service_nodes
     return true;
   }
 
+  bool make_registration_signature(
+      const std::vector<cryptonote::account_public_address>& addresses,
+      uint64_t operator_portions,
+      const std::vector<uint64_t>& portions,
+      uint64_t exp_timestamp,
+      const crypto::public_key& service_node_pubkey,
+      const crypto::secret_key& service_node_key,
+      crypto::signature &signature)
+  {
+    crypto::hash hash;
+    bool hashed = cryptonote::get_registration_hash(addresses, operator_portions, portions, exp_timestamp, hash);
+    if (!hashed)
+    {
+      MERROR("Could not make registration hash from addresses and portions");
+      return false;
+    }
+    crypto::generate_signature(hash, service_node_pubkey, service_node_key, signature);
+    return true;
+  }
+
   bool make_registration_cmd(cryptonote::network_type nettype, const std::vector<std::string> args, const crypto::public_key& service_node_pubkey,
                              const crypto::secret_key service_node_key, std::string &cmd, bool make_friendly)
   {
@@ -1101,16 +1119,9 @@ namespace service_nodes
 
     uint64_t exp_timestamp = time(nullptr) + (autostake ? STAKING_AUTHORIZATION_EXPIRATION_AUTOSTAKE : STAKING_AUTHORIZATION_EXPIRATION_WINDOW);
 
-    crypto::hash hash;
-    bool hashed = cryptonote::get_registration_hash(addresses, operator_portions, portions, exp_timestamp, hash);
-    if (!hashed)
-    {
-      MERROR(tr("Could not make registration hash from addresses and portions"));
-      return false;
-    }
-
     crypto::signature signature;
-    crypto::generate_signature(hash, service_node_pubkey, service_node_key, signature);
+    if (!make_registration_signature(addresses, operator_portions, portions, exp_timestamp, service_node_pubkey, service_node_key, signature))
+      return false;
 
     std::stringstream stream;
     if (make_friendly)
@@ -1161,6 +1172,13 @@ namespace service_nodes
     uint64_t linear_up = (uint64_t)(5 * COIN * height / 2592) + 8000 * COIN;
     uint64_t flat = 15000 * COIN;
     return std::max(base + variable, height < 3628800 ? linear_up : flat);
+  }
+  uint64_t portions_to_amount(uint64_t portions, uint64_t staking_requirement)
+  {
+    uint64_t hi, lo, resulthi, resultlo;
+    lo = mul128(staking_requirement, portions, &hi);
+    div128_64(hi, lo, STAKING_PORTIONS, &resulthi, &resultlo);
+    return resultlo;
   }
 }
 

@@ -283,10 +283,27 @@ namespace service_nodes
   };
 
   bool convert_registration_args(cryptonote::network_type nettype, std::vector<std::string> args, std::vector<cryptonote::account_public_address>& addresses, std::vector<uint64_t>& portions, uint64_t& portions_for_operator, bool& autostake);
-  bool make_registration_cmd(cryptonote::network_type nettype, const std::vector<std::string> args, const crypto::public_key& service_node_pubkey,
-                             const crypto::secret_key service_node_key, std::string &cmd, bool make_friendly);
+
+  bool make_registration_cmd(
+      cryptonote::network_type nettype,
+      const std::vector<std::string> args,
+      const crypto::public_key& service_node_pubkey,
+      const crypto::secret_key service_node_key,
+      std::string &cmd,
+      bool make_friendly);
+
+  bool make_registration_signature(
+      const std::vector<cryptonote::account_public_address>& addresses,
+      uint64_t operator_portions,
+      const std::vector<uint64_t>& portions,
+      uint64_t exp_timestamp,
+      const crypto::public_key& service_node_pubkey,
+      const crypto::secret_key& service_node_key,
+      crypto::signature &signature);
 
   uint64_t get_staking_requirement(cryptonote::network_type nettype, uint64_t height);
+
+  uint64_t portions_to_amount(uint64_t portions, uint64_t staking_requirement);
 
   const static cryptonote::account_public_address null_address{ crypto::null_pkey, crypto::null_pkey };
 }

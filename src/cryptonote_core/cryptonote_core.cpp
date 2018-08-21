@@ -1745,6 +1745,7 @@ namespace cryptonote
 
     return result;
   }
+  //-----------------------------------------------------------------------------------------------
   bool core::get_service_node_keys(crypto::public_key &pub_key, crypto::secret_key &sec_key) const
   {
     if (m_service_node)
@@ -1753,6 +1754,15 @@ namespace cryptonote
       sec_key = m_service_node_key;
     }
     return m_service_node;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::set_service_node_keys(const cryptonote::keypair& service_node_keys)
+  {
+    if (!m_service_node)
+      return false;
+    m_service_node_key = service_node_keys.sec;
+    m_service_node_pubkey = service_node_keys.pub;
+    return true;
   }
   //-----------------------------------------------------------------------------------------------
   std::time_t core::get_start_time() const
